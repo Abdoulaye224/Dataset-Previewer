@@ -61,6 +61,18 @@ if uploaded_file:
                 df_clustered["cluster"] = labels
                 st.write(df_clustered)
 
+            # ✅ Exporter les noms de colonnes
+            st.markdown("---")
+            st.subheader("⬇️ Exporter les noms des colonnes")
+            if st.button("Télécharger la liste des colonnes"):
+                column_names = "\n".join(df.columns)
+                st.download_button(
+                    label="📥 Télécharger colonnes.txt",
+                    data=column_names,
+                    file_name="colonnes.txt",
+                    mime="text/plain",
+                )
+
     except Exception as e:
         st.error(f"Erreur lors de la lecture du fichier : {e}")
 else:
