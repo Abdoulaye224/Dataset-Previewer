@@ -1,11 +1,14 @@
 import streamlit as st
 import pandas as pd
-import io
+import matplotlib.pyplot as plt
+from data_agent import DataExplorerAgent
 
 st.set_page_config(page_title="Dataset Previewer", layout="wide")
 st.title("📊 Dataset Previewer")
 
-uploaded_file = st.file_uploader("📁 Upload your dataset", type=["csv", "xlsx", "xls", "parquet", "json"])
+uploaded_file = st.file_uploader(
+    "📁 Upload your dataset", type=["csv", "xlsx", "xls", "parquet", "json"]
+)
 
 if uploaded_file:
     file_name = uploaded_file.name.lower()
@@ -23,12 +26,40 @@ if uploaded_file:
             df = None
 
         if df is not None:
-            st.success(f"✅ Fichier chargé avec succès ! Dimensions : {df.shape[0]} lignes × {df.shape[1]} colonnes")
+            st.success(
+                f"✅ Fichier chargé avec succès ! Dimensions : {df.shape[0]} lignes × {df.shape[1]} colonnes"
+            )
             st.dataframe(df, use_container_width=True)
             st.markdown("### Aperçu rapide des colonnes")
             st.write(df.dtypes)
             if st.checkbox("📈 Afficher les statistiques descriptives"):
                 st.write(df.describe(include="all"))
+
+            # AI agent features
+            agent = DataExplorerAgent(df)
+            st.markdown("---")
+            st.header("🔍 Analyse avancée")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.checkbox("Afficher la heatmap de corrélation"):
+                    heatmap = agent.correlation_heatmap()
+                    st.image(heatmap)
+            with col2:
+                if st.checkbox("Détecter les valeurs aberrantes"):
+                    outliers = agent.detect_outliers()
+                    if outliers.empty:
+                        st.info("Aucune valeur aberrante détectée")
+                    else:
+                        st.write(outliers)
+
+            if st.checkbox("Clusteriser les données"):
+                n_clusters = st.number_input(
+                    "Nombre de clusters", min_value=2, max_value=10, value=3
+                )
+                labels = agent.cluster(n_clusters)
+                df_clustered = df.copy()
+                df_clustered["cluster"] = labels
+                st.write(df_clustered)
 
     except Exception as e:
         st.error(f"Erreur lors de la lecture du fichier : {e}")
